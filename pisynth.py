@@ -15,24 +15,45 @@ def createGroup():
   group = supriya.realtime.Group().allocate()
   return group
 
-def makeSynthDef(server):
-  builder = supriya.synthdefs.SynthDefBuilder( amplitude=1.0, frequency=440.0, gate=1.0, )
+import enum
+class Osc(enum.Enum):
+  SinOsc=1
+  VarSaw = 2
+  COsc = 3
+
+def osc_to_ugen(osc,builder):
+  if osc.name == "SinOsc":
+    return supriya.ugens.SinOsc.ar( frequency=builder['frequency'],) 
+  if osc.name == "VarSaw":
+    return supriya.ugens.VarSaw.ar( frequency=builder['frequency'],) 
+  if osc.name == "COsc":
+    return supriya.ugens.COsc.ar( frequency=builder['frequency'],buffer_id = 0,) 
+
+
+def makeSynthDef(server,amp=0.0,freq=440.0,gate=1,perc_env = False,osc = Osc.SinOsc,delay={"delay":True}):
+  builder = supriya.synthdefs.SynthDefBuilder( amplitude=amp, frequency=freq, gate=gate, )
   with builder: 
-    source = supriya.ugens.SinOsc.ar( frequency=builder['frequency'],) 
+    source = osc_to_ugen(osc,builder)
     envelope = supriya.ugens.EnvGen.ar( 
       done_action=supriya.DoneAction.NOTHING, 
-      envelope=supriya.synthdefs.Envelope.percussive(attack_time=0.01,release_time=0.5,),
+      envelope=
+        supriya.synthdefs.Envelope.percussive(attack_time=0.01,release_time=0.5,) 
+        if perc_env else 
+        supriya.synthdefs.Envelope.asr(attack_time=0.01,release_time=0.5,)
+      
+      ,
       gate=builder['gate'], ) 
     source = source * builder['amplitude']
     source = source * envelope 
-    #delay = supriya.ugens.AllpassC.ar(source,0.2,0.2,0.5)
-    pan = supriya.ugens.Pan2.ar(source=source)#*delay )
+    delay = supriya.ugens.AllpassC.ar(source,0.2,0.2,0.5)
+    pan = supriya.ugens.Pan2.ar(source=source*delay )
     out = supriya.ugens.Out.ar( bus=0, source=pan, ) 
   synthdef = builder.build(name="test").allocate()
   server.sync()
   return synthdef
 
 def toMidi(freq):
+
     return 69 + ( 12 * math.log( freq/440 ) / math.log(2) )
 
 def toHz(freq):
@@ -54,6 +75,9 @@ def pisanoToRythm(series):
   linear_list = supriya.ugens.LinLin.ar(series.tolist(),min(series),max(series),0,1)
   return [x for x in linear_list]
 
+def create_wavetable(period):
+  return 
+
 
 #%%
 
@@ -62,8 +86,19 @@ group = createGroup()
 
 #%%
 
-sDef = makeSynthDef(server)
+t = supriya.realtime.Buffer().allocate(frame_count=len(pisano.getPisano(436)))
+
+#%%%
+p  = pisano.getPisano(436)
+t.set([(i,x) for i,x in enumerate(p)])
+#%%
+print(t.query())
+
+
+#%%
+sDef = makeSynthDef(server,amp=0.8,perc_env = True,osc=Osc.COsc)
 synth = supriya.Synth(sDef)
+sDef = makeSynthDef(server,amp=0.8,perc_env= False,osc=Osc.SinOsc)
 synth2 = supriya.Synth(sDef)
 
 
@@ -73,8 +108,8 @@ group.append(synth2)
 #%%
 
 synth_line = pisanoToHz(scales.quantizeScale(pisanoToMidi(pisano.getPisano(436),40,70), scales.Scales.Phrygian_Minor))
-synth_line2 = pisanoToHz(scales.quantizeScale(pisanoToMidi(pisano.getPisano(436),15,40), scales.Scales.Pentatonic_Minor))
-rythm = pisanoToRythm(pisano.getPisano(42))
+synth_line2 = pisanoToHz(scales.quantizeScale(pisanoToMidi(pisano.getPisano(436),20,40), scales.Scales.Pentatonic_Minor))
+rythm = pisanoToRythm(pisano.getPisano(415))
 
 #%%
 

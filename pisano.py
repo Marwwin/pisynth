@@ -51,10 +51,6 @@ sys.setrecursionlimit(10000)
 
 ## GET THE TURTLE READY FOR ACTION
 
-
-
-#%%
-#
 #import turtle
 #
 #s = turtle.getscreen()
@@ -62,7 +58,7 @@ sys.setrecursionlimit(10000)
 #t = turtle.Turtle()
 #
 #def getCircleData(period):
-#  return len(pisanoPeriods[period])
+#  return len(getPisano(period))
 #
 #def getAllPoints(p):
 #  points = []
@@ -72,7 +68,7 @@ sys.setrecursionlimit(10000)
 #  return points
 #
 #def drawPisano(mod):
-#  currentPeriod = pisanoPeriods[mod]
+#  currentPeriod = getPisano(mod)
 #  points = getAllPoints(mod)
 #  for i in range(len(currentPeriod)):
 #    t.goto(points[currentPeriod[i]])
@@ -95,10 +91,10 @@ sys.setrecursionlimit(10000)
 #
 ##t.circle(100,360/5)
 ##t.pos()
-#
-##%%
-#
-#
+
+#%%
+
+
 ##%%
 #
 #while True:

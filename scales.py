@@ -2,17 +2,20 @@
 import enum
 
 class Scales(enum.Enum):
-  Major = 1
-  Dorian = 2
-  Phrygian = 3
-  Lydian = 4
-  Mixolydian = 5
-  Minor = 6
-  Locrian = 7
-  Harmonic_Minor = 8
-  Phrygian_Minor = 9
-  Pentatonic_Minor = 10
-  Pentatonic_Major = 11
+  Major = 0
+  Dorian = 1
+  Phrygian = 2
+  Lydian = 3
+  Mixolydian = 4
+  Minor = 5
+  Locrian = 6
+  Harmonic_Minor = 7
+  Phrygian_Minor = 8
+  Pentatonic_Minor = 9
+  Pentatonic_Major = 10
+  Japanese = 11
+  Egyptian = 12
+  Man_Gong = 13
 
 def getScalePattern(scale):
   if scale.name == "Major":
@@ -37,6 +40,14 @@ def getScalePattern(scale):
     return [0,3,5,7,10]
   if scale.name == "Pentatonic_Major":
     return [0,2,4,7,9]
+  if scale.name == "Japanese":
+    return [0,1,5,7,8]
+  if scale.name == "Egyptian":
+    return [0,2,5,7,10]
+  if scale.name == "Man_Gong":
+    return [0,3,5,8,10]
+  if scale.name == "Ritsusen":
+    return [0,2,5,7,9]
 
 # Floor the note to the nearest lower correct scale note
 def fixNote(note,pattern):
@@ -48,18 +59,17 @@ def fixNote(note,pattern):
     lower_notes = list(filter(lambda x: x < degree ,pattern))
     return lower_notes[-1] + octave 
 
+# Gets the root note of a pisano series according to the most common note
+def getRootOffset(input):
+  offset = max(set(input), key= input.count)%12
+  return offset
 
-def quantizeScale(input, scale, root_offset = True):
+def quantizeScale(input, scale, offset):
   '''
     Takes as input as list of midi notes and a scale see Scales enum
     Return a list with the values floored to the closest key in the scale
   '''
   pattern = getScalePattern(scale)
-  if root_offset:
-    # Offsets the output list according to the most frequent value in the list being the root note
-    offset = max(set(input), key= input.count)%12
-  else:
-    offset = 0
   output = list(map(lambda x: fixNote(x,pattern)+offset,input))
   return output
 
